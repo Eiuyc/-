@@ -6,7 +6,6 @@ __pycache__/
 .idea/
 *.cfg
 *.jpg
-!doc/
 
 # C extensions
 *.so
@@ -132,3 +131,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+!doc/
