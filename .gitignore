@@ -3,7 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-!.doc/
+!doc/
 .idea/
 *.cfg
 .gitignore
