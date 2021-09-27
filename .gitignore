@@ -3,10 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-!doc/
 .idea/
 *.cfg
 *.jpg
+!doc/
 
 # C extensions
 *.so
