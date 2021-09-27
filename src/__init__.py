@@ -1,1 +1,0 @@
-from .KanjiG import Generator
