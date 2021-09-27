@@ -1,5 +1,5 @@
 # Kanji Generator
-
+This tool can generate Kanji image and 
 ## Install
 ```shell
 # Pillow and opencv are required
@@ -33,8 +33,38 @@ for i in range(10):
         print(i['location'])
 ```
 
+## Outputs
+### Format
+Output is always this format:
+```python
+image, label
+```
+For `single` mode, `label` is in this format:
+```python
+{
+    'word': word, # Kanji
+    'index': index # integer
+}
+```
 
-<center>
+For `multiple` mode, `label` is in this format:
+```python
+{
+    'words': [word_1, word_2, ..., word_n],
+}
+```
+word_i shall be like this:
+```python
+{
+    'word': word, # Kanji
+    'index': index, # integer
+    'size': size, # tuple, for example (64, 64)
+    'location': location # tuple, for example (256, 128)
+},
+```
+
+### Image Example
+<h3>single mode result</h3>
 <table style="width:70%;text-align:center">
   <tr>
     <th colspan="" width=20% style="text-align:center">寸</th>
@@ -51,9 +81,6 @@ for i in range(10):
     <td><img src="./doc/single/择.jpg" width=90% /></td>
   </tr>
 </table>
-<h3>single mode result</h3>
-</center>
 
-
-<img src="./doc/multiple/0.jpg">
 <h3>multiple mode result</h3>
+<img src="./doc/multiple/0.jpg">
