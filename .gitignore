@@ -5,6 +5,7 @@ __pycache__/
 
 .idea/
 *.cfg
+setup.py
 src/*.jpg
 src/test.py
 

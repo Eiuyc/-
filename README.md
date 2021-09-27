@@ -1,5 +1,5 @@
 # Kanji Generator
-This tool can generate Kanji image and 
+This tool can generate Kanji image 
 ## Install
 ```shell
 # Pillow and opencv are required
@@ -16,14 +16,13 @@ from PIL import Image
 from KanjiG import Generator
 
 g = Generator()
-g.init(mode='single')
 for i in range(10):
     img, label = g.gen_sample()
     img = Image.fromarray(img)
     word = label['word']
     img.save(f'{word}.jpg')
 
-g.init(mode='multiple', grid=[5,5])
+g.config(mode='multiple', grid=[5,5])
 for i in range(10):
     img, label = g.gen_sample()
     img = Image.fromarray(img)

@@ -6,9 +6,20 @@ from PIL import Image, ImageDraw, ImageFont
 
 class Generator():
     def __init__(self):
-        pass
+        self.DATA_PATH = Path(__file__).resolve().parents[0] / 'data'
+        with (self.DATA_PATH/'3755.txt').open(encoding='utf-8') as f:
+            self.KANJI_LIST = f.readline()
 
-    def init(self, size=64, bg_color='white', word_color='black', mode='single', grid=[1, 1]):
+        self.FONTS_PATH = self.DATA_PATH / 'fonts'
+        self.FONT_ENCODING = 'unic'
+        self.TEXT_LOCATION = (0, 0)
+        self.LINE_COLOR = [144] * 3
+
+        self.ROTATE_ANGLES = [-7, -5, -3, -1, 0, 1, 3, 5, 7]
+
+        self.config()
+
+    def config(self, size=64, bg_color='white', word_color='black', mode='single', grid=[1, 1]):
         self.SIZE = size
         self.BG_COLOR = bg_color
         self.WORD_COLOR = word_color
@@ -19,22 +30,12 @@ class Generator():
         self.BG = np.array(Image.new('L', (self.SIZE,self.SIZE), self.BG_COLOR))
         self.BG_MULTI = np.array(Image.new('L', (self.SIZE*self.GRID[1], self.SIZE*self.GRID[0]), self.BG_COLOR))
 
-        self.DATA_PATH = Path(__file__).resolve().parents[0] / 'data'
-        with (self.DATA_PATH/'3755.txt').open(encoding='utf-8') as f:
-            self.KANJI_LIST = f.readline()
-
-        self.FONTS_PATH = self.DATA_PATH / 'fonts'
-        self.FONT_ENCODING = 'unic'
         self.FONT_SIZE = size
         self.FONTS = []
         for font_path in self.FONTS_PATH.glob('*.ttf'):
             self.FONTS.append(
                 ImageFont.truetype(font_path.as_posix(), self.FONT_SIZE, encoding=self.FONT_ENCODING)
             )
-        self.TEXT_LOCATION = (0, 0)
-        self.LINE_COLOR = [144] * 3
-
-        self.ROTATE_ANGLES = [-7, -5, -3, -1, 0, 1, 3, 5, 7]
 
     def get_font(self):
         index = np.random.randint(len(self.FONTS))
