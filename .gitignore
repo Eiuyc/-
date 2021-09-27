@@ -6,6 +6,7 @@ __pycache__/
 .idea/
 *.cfg
 src/*.jpg
+src/test.py
 
 # C extensions
 *.so
