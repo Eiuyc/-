@@ -1,1 +1,1 @@
-# Hanzi Generator
+# Kanji Generator
