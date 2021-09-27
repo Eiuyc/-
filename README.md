@@ -33,5 +33,27 @@ for i in range(10):
         print(i['location'])
 ```
 
-<img src="./doc/single.jpg">
+
+<center>
+<table style="width:70%;text-align:center">
+  <tr>
+    <th colspan="" width=20% style="text-align:center">寸</th>
+    <th style="text-align:center">垛</th>
+    <th style="text-align:center">福</th>
+    <th style="text-align:center">歌</th>
+    <th style="text-align:center">择</th>
+  </tr>
+  <tr>
+    <td><img src="./doc/single/寸.jpg" width=90% /></td>
+    <td><img src="./doc/single/垛.jpg" width=90% /></td>
+    <td><img src="./doc/single/福.jpg" width=90% /></td>
+    <td><img src="./doc/single/歌.jpg" width=90% /></td>
+    <td><img src="./doc/single/择.jpg" width=90% /></td>
+  </tr>
+</table>
+<h3>single mode result</h3>
+</center>
+
+
 <img src="./doc/multiple/0.jpg">
+<h3>multiple mode result</h3>
