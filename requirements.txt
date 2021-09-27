@@ -1,0 +1,4 @@
+pathlib
+Pillow
+opencv-python
+numpy
