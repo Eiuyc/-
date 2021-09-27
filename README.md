@@ -1,1 +1,1 @@
-# Hanzi generator
+# Hanzi Generator
