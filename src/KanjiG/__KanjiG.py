@@ -42,11 +42,12 @@ class Generator():
         font = self.FONTS[index]
         return font
 
-    def noise(self, image):
-        noise = np.random.randint(0,256,(self.SIZE,self.SIZE))
+    def noise(self, image, threshold=None):
+        noise = np.random.randint(0, 256, image.shape[:2])
         # _, noise = cv2.threshold(noise.astype('uint8'), 240, 255, image, cv2.THRESH_BINARY)
-        t = np.random.randint(200, 250)
-        image[noise > t] = 255 - image[noise > t]
+        t = np.random.randint(200, 250) if threshold is None else threshold
+        m = noise > t
+        image[m] = 255 - image[m]
         return image
 
     def rotate(self, image):
@@ -60,9 +61,9 @@ class Generator():
         return image
 
     def line(self, image):
-        p1, p2 = np.random.randint(0, self.SIZE, (2,2))
+        p1, p2 = map(tuple, np.random.randint(0, self.SIZE, (2,2)))
         thickness = np.random.randint(1, 5)
-        image = cv2.line(image, tuple(p1), tuple(p2), self.LINE_COLOR, thickness=thickness)
+        image = cv2.line(image, p1, p2, self.LINE_COLOR, thickness=thickness)
         return image
 
     def gen_sample(self):
@@ -89,7 +90,6 @@ class Generator():
 
     def gen_multiple(self):
         image = self.BG_MULTI
-        cv2.imwrite('a.jpg', image)
         words = []
         for i in range(self.GRID[0]):
             for j in range(self.GRID[1]):
@@ -108,6 +108,7 @@ class Generator():
         label = {
             'words': words
         }
+        image = self.noise(image, 250)
         return image, label
 
 
