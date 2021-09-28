@@ -8,6 +8,7 @@ __pycache__/
 setup.py
 src/*.jpg
 src/test.py
+KanjiG-*
 
 # C extensions
 *.so

@@ -1,9 +1,0 @@
-graft src/KanjiG/data
-
-include *.md
-
-include LICENSE.txt
-
-include *.txt
-
-include *.ttf
