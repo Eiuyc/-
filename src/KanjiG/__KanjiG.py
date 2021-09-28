@@ -60,10 +60,9 @@ class Generator():
         return image
 
     def line(self, image):
-        p1 = np.random.randint(0, self.SIZE, (2,))
-        p2 = np.random.randint(0, self.SIZE, (2,))
+        p1, p2 = np.random.randint(0, self.SIZE, (2,2))
         thickness = np.random.randint(1, 5)
-        image = cv2.line(image, p1, p2, self.LINE_COLOR, thickness=thickness)
+        image = cv2.line(image, tuple(p1), tuple(p2), self.LINE_COLOR, thickness=thickness)
         return image
 
     def gen_sample(self):
