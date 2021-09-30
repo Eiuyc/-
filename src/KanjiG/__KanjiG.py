@@ -6,104 +6,156 @@ from PIL import Image, ImageDraw, ImageFont
 
 class Generator():
     def __init__(self):
-        self.DATA_PATH = Path(__file__).resolve().parents[0] / 'data'
-        with (self.DATA_PATH/'3755.txt').open(encoding='utf-8') as f:
+        self._DATA_PATH = Path(__file__).resolve().parents[0] / 'data'
+        with (self._DATA_PATH/'3755.txt').open(encoding='utf-8') as f:
             self.KANJI_LIST = f.readline()
 
-        self.FONTS_PATH = self.DATA_PATH / 'fonts'
-        self.FONT_ENCODING = 'unic'
-        self.TEXT_LOCATION = (0, 0)
-        self.LINE_COLOR = [144] * 3
+        self._FONTS_PATH = self._DATA_PATH / 'fonts'
+        self._FONT_ENCODING = 'unic'
+        self._TEXT_LOCATION = (0, 0)
 
-        self.ROTATE_ANGLES = [-7, -5, -3, -1, 0, 1, 3, 5, 7]
+        self._NOISE_THRESHOLD_RANGE = [200, 240]
+
+        self._ROTATE_ANGLES = [-9, -7, -5, -3, -1, 0, 1, 3, 5, 7, 9]
+
+        self._LINE_COLORS = [100, 150, 200]
+        self._LINE_COUNT_RANGE = [1, 3]
+        self._LINE_THICKNESS_RANGE = [1, 3]
+
+        self._SCALE_SIZE_RANGE = [1, 0.8, 0.7, 0.6]
+
+        self._AUGMENT_METHODS = {
+            'noise': self._noise,
+            'rotate': self._rotate,
+            'line': self._line,
+            'scale': self._scale,
+        }
 
         self.config()
 
     def config(self, size=64, bg_color='white', word_color='black', mode='single', grid=[1, 1]):
-        self.SIZE = size
-        self.BG_COLOR = bg_color
-        self.WORD_COLOR = word_color
-        self.MODE = mode
-        self.GRID = grid # row, column
+        self._SIZE = size
+        self._BG_COLOR = bg_color
+        self._WORD_COLOR = word_color
+        self._MODE = mode
+        self._GRID = grid # row, column
 
         # width, height
-        self.BG = np.array(Image.new('L', (self.SIZE,self.SIZE), self.BG_COLOR))
-        self.BG_MULTI = np.array(Image.new('L', (self.SIZE*self.GRID[1], self.SIZE*self.GRID[0]), self.BG_COLOR))
+        self._BG = np.array(Image.new('L', (self._SIZE,self._SIZE), self._BG_COLOR))
+        self._BG_MULTI = np.array(Image.new('L', (self._SIZE*self._GRID[1], self._SIZE*self._GRID[0]), self._BG_COLOR))
 
-        self.FONT_SIZE = size
-        self.FONTS = []
-        for font_path in self.FONTS_PATH.glob('*.ttf'):
-            self.FONTS.append(
-                ImageFont.truetype(font_path.as_posix(), self.FONT_SIZE, encoding=self.FONT_ENCODING)
-            )
+        self._BIAS = size / 4
+        self._FONT_SIZE = size
+        self._FONTS = []
+        for font_path in self._FONTS_PATH.glob('*.ttf'):
+            self._FONTS.append(ImageFont.truetype(font_path.as_posix(), self._FONT_SIZE, encoding=self._FONT_ENCODING))
 
-    def get_font(self):
-        index = np.random.randint(len(self.FONTS))
-        font = self.FONTS[index]
+    def _get_font(self, font_name=None):
+        font = self._FONTS[0]
+        if font_name is None:
+            index = np.random.randint(len(self._FONTS))
+            font = self._FONTS[index]
+        else:
+            for f in self._FONTS:
+                if Path(f.path).name == font_name:
+                    font = f
+                    break
         return font
 
-    def noise(self, image, threshold=None):
+    def _get_text_image(self, word):
+        image = Image.fromarray(self._BG)
+        draw = ImageDraw.Draw(image)
+        draw.text(self._TEXT_LOCATION, word, font=self._get_font(), fill=self._WORD_COLOR)
+        image = np.array(image)
+        return image
+
+    def _noise(self, image, threshold=None):
         noise = np.random.randint(0, 256, image.shape[:2])
-        # _, noise = cv2.threshold(noise.astype('uint8'), 240, 255, image, cv2.THRESH_BINARY)
-        t = np.random.randint(200, 250) if threshold is None else threshold
+        t = np.random.randint(*self._NOISE_THRESHOLD_RANGE) if threshold is None else threshold
         m = noise > t
-        image[m] = 255 - image[m]
+        # image[m] = 255 - image[m]
+        image[m] = 144
         return image
 
-    def rotate(self, image):
-        h, w = image.shape
-        m = cv2.getRotationMatrix2D((h*0.5, w*0.5), np.random.choice(self.ROTATE_ANGLES), 1)
-        if self.BG_COLOR == 'white':
+    def _rotate(self, image):
+        hw = np.array(image.shape[:2])
+        m = cv2.getRotationMatrix2D(0.5*hw, np.random.choice(self._ROTATE_ANGLES), 1)
+        if self._BG_COLOR == 'white':
             image = 255 - image
-        image = cv2.warpAffine(image, m, (h, w))
-        if self.BG_COLOR == 'white':
+        image = cv2.warpAffine(image, m, hw)
+        if self._BG_COLOR == 'white':
             image = 255 - image
         return image
 
-    def line(self, image, count_range=[1,3], thickness_range=[1,3]):
-        for _ in range(np.random.randint(*count_range)):
+    def _line(self, image):
+        for _ in range(np.random.randint(*self._LINE_COUNT_RANGE)):
             p1, p2 = map(tuple, np.random.randint(0, image.shape[:2], (2,2)))
-            thickness = np.random.randint(*thickness_range)
-            image = cv2.line(image, p1, p2, self.LINE_COLOR, thickness=thickness)
+            thickness = np.random.randint(*self._LINE_THICKNESS_RANGE)
+            image = cv2.line(image, p1, p2, int(np.random.choice(self._LINE_COLORS)), thickness=thickness)
+        return image
+
+    def _scale(self, image):
+        hw = np.array(image.shape[:2])
+        s = np.random.choice(self._SCALE_SIZE_RANGE)
+        image = cv2.resize(image, list(map(int, s*hw)))
         return image
 
     def gen_sample(self):
-        gen = {'single': self.gen_single, 'multiple': self.gen_multiple}[self.MODE]
+        gen = {'single': self._gen_single, 'multiple': self._gen_multiple}[self._MODE]
         image, label = gen()
         return image, label
 
-    def gen_single(self, blank=False, index=None):
+    def _augment(self, image, *args):
+        for method in args:
+            image = self._AUGMENT_METHODS[method](image)
+        return image
+
+    def _gen_single(self, blank=False, index=None, augment=True):
         if index is None: index = np.random.randint(len(self.KANJI_LIST))
         word = self.KANJI_LIST[index]
         if blank:
             index = 0
             word = ''
-        image = Image.fromarray(self.BG)
-        draw = ImageDraw.Draw(image)
-        draw.text(self.TEXT_LOCATION, word, font=self.get_font(), fill=self.WORD_COLOR)
-        image = np.array(image)
-        image = self.noise(image)
-        image = self.rotate(image)
-        image = self.line(image)
+        image = self._get_text_image(word)
+        if augment:
+            image = self._augment(image, 'rotate', 'line', 'noise')
         label = {
             'word': word,
             'index': index
         }
         return image, label
 
-    def gen_multiple(self):
-        image = self.BG_MULTI
+    def _calc_location(self, i, j, size):
+        try:
+            yx_bias = np.random.randint(0, self._SIZE - size, (2,))
+        except:
+            yx_bias = 0
+        if i*j and i != self._GRID[0]-1 and j != self._GRID[1]-1:
+            yx_bias += np.random.randint(-self._BIAS, self._BIAS)
+        location = np.array([i, j], dtype=int) * self._SIZE + yx_bias
+        return location
+
+    def _gen_multiple(self):
+        image = self._BG_MULTI
         words = []
-        for i in range(self.GRID[0]):
-            for j in range(self.GRID[1]):
+        for i in range(self._GRID[0]):
+            for j in range(self._GRID[1]):
                 blank = np.random.randint(2)
-                img, label = self.gen_single(blank)
-                location = i*self.SIZE, j*self.SIZE
-                image[location[0]:location[0]+self.SIZE, location[1]:location[1]+self.SIZE] = img
                 if blank: continue
+                # generate
+                img, label = self._gen_single(blank=blank, augment=0)
+                img = self._augment(img, 'rotate', 'line', 'scale')
+                size = np.array(img.shape[:2])
+                # location
+                location = self._calc_location(i, j, size)
+                # area
+                area = image[location[0]:location[0]+size[0], location[1]:location[1]+size[1]]
+                m = area > 128
+                area[m] = img[m]
+                image[location[0]:location[0] + size[0], location[1]:location[1] + size[1]] = area
+                # label
                 word = label['word']
                 index = label['index']
-                size = self.SIZE, self.SIZE
                 words.append({
                     'word': word,
                     'index': index,
@@ -113,27 +165,44 @@ class Generator():
         label = {
             'words': words
         }
-        image = self.noise(image, 250)
-        image = self.line(image)
+        image = self._augment(image, 'noise', 'line')
         return image, label
 
-    def label2cxywh(self, size, label):
+    def label2cxywh(self, sample_size, label):
+        sample_size = np.array(sample_size)
         words = label['words']
         def word2line(word):
             c = word['index']
-            print(word['word'], c)
-            h, w = word['size']
-            y, x = word['location']
-            x += w/2
-            y += h/2
-            y /= size[0]
-            h /= size[0]
-            x /= size[1]
-            w /= size[1]
-            s = f'{c} {x:.4f} {y:.4f} {w:.4f} {h:.4f}\n'
-            return s
+            hw = np.array(word['size'])
+            y, x = (hw / 2 + word['location']) / sample_size
+            h, w = hw / sample_size
+            # s = f'{c} {x:.4f} {y:.4f} {w:.4f} {h:.4f}\n'
+            return c, x,y,w,h
         l = list(map(word2line, words))
         return l
+
+    def cxywh2cxyxy(self, cxywh, sample_size):
+        sample_size = np.array(sample_size)
+        c, x, y, w, h = cxywh
+        yx = sample_size * (y, x)
+        hw = sample_size * (h, w)
+        yx1 = yx - hw // 2
+        yx2 = yx + hw // 2
+        y1, x1, y2, x2 = map(int, (*yx1, *yx2))
+        return c, x1, y1, x2, y2
+
+    def cut(self, image, label):
+        l = self.label2cxywh(image.shape[:2], label)
+        cuts = []
+        for i, box in enumerate(l):
+            c, x1, y1, x2, y2 = self.cxywh2cxyxy(box, image.shape[:2])
+            cut = image[y1:y2, x1:x2]
+            # cv2.rectangle(image, (x1,y1), (x2,y2), (10,10,10), 3)
+            im = Image.fromarray(cut)
+            word = self.KANJI_LIST[c]
+            cuts.append((cut, word))
+        return cuts
+
 
 if __name__ == '__main__':
     g = Generator()
@@ -145,14 +214,12 @@ if __name__ == '__main__':
     #     word = label['word']
     #     img.save(f'test/{word}.jpg')
 
-    g.init(mode='multiple', grid=[5,5])
-    for i in range(10):
-        img, label = g.gen_sample()
-        img = Image.fromarray(img)
-        img.save(f'test_mul/{i}.jpg')
-        for i in label['words']:
-            print(i['word'])
-            print(i['location'])
+    g.config(mode='multiple', grid=[10,8])
+    img, label = g.gen_sample()
+    cv2.imwrite('../test/a.jpg', img)
+    cuts = g.cut(img, label)
+    for cut in cuts:
+        print(cut[1])
 
 
 
