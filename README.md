@@ -1,5 +1,5 @@
 # Hanzi Generator
-This tool can generate Kanji image 
+This tool can generate Hanzi image 
 ## Install
 ```shell
 # Pillow and opencv are required
