@@ -1,4 +1,4 @@
-# Kanji Generator
+# Hanzi Generator
 This tool can generate Kanji image 
 ## Install
 ```shell
@@ -6,14 +6,14 @@ This tool can generate Kanji image
 python -m pip install Pillow
 python -m pip install opencv-python
 
-# Use pip to install KanjiG
-python -m pip install -U KanjiG -i https://test.pypi.org/simple 
+# Use pip to install HanziG
+python -m pip install -U HanziG -i https://test.pypi.org/simple 
 ```
 
 ## Usage
 ```python3
 from PIL import Image
-from KanjiG import Generator
+from HanziG import Generator
 
 g = Generator()
 for i in range(10):
