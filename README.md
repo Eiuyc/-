@@ -41,7 +41,7 @@ image, label
 For `single` mode, `label` is in this format:
 ```python
 {
-    'word': word, # Kanji
+    'word': word, # Hanzi
     'index': index # integer
 }
 ```
@@ -55,7 +55,7 @@ For `multiple` mode, `label` is in this format:
 word_i shall be like this:
 ```python
 {
-    'word': word, # Kanji
+    'word': word, # Hanzi
     'index': index, # integer
     'size': size, # tuple, for example (64, 64)
     'location': location # tuple, for example (256, 128)

@@ -8,7 +8,7 @@ class Generator():
     def __init__(self):
         self._DATA_PATH = Path(__file__).resolve().parents[0] / 'data'
         with (self._DATA_PATH/'3755.txt').open(encoding='utf-8') as f:
-            self.KANJI_LIST = f.readline()
+            self.Hanzi_LIST = f.readline()
 
         self._FONTS_PATH = self._DATA_PATH / 'fonts'
         self._FONT_ENCODING = 'unic'
@@ -50,7 +50,7 @@ class Generator():
         for font_path in self._FONTS_PATH.glob('*.ttf'):
             self._FONTS.append(ImageFont.truetype(font_path.as_posix(), self._FONT_SIZE, encoding=self._FONT_ENCODING))
 
-    def _get_font(self, font_name=None):
+    def _get_font(self, font_name=None, size=None):
         font = self._FONTS[0]
         if font_name is None:
             index = np.random.randint(len(self._FONTS))
@@ -60,6 +60,8 @@ class Generator():
                 if Path(f.path).name == font_name:
                     font = f
                     break
+        if size:
+            font = ImageFont.truetype(font.path, size, encoding=self._FONT_ENCODING)
         return font
 
     def _get_text_image(self, word):
@@ -88,7 +90,8 @@ class Generator():
         return image
 
     def _line(self, image):
-        for _ in range(np.random.randint(*self._LINE_COUNT_RANGE)):
+        # for _ in range(np.random.randint(*self._LINE_COUNT_RANGE)):
+        for _ in range(max(image.shape[:2])//64):
             p1, p2 = map(tuple, np.random.randint(0, image.shape[:2], (2,2)))
             thickness = np.random.randint(*self._LINE_THICKNESS_RANGE)
             image = cv2.line(image, p1, p2, int(np.random.choice(self._LINE_COLORS)), thickness=thickness)
@@ -111,8 +114,8 @@ class Generator():
         return image
 
     def _gen_single(self, blank=False, index=None, augment=True):
-        if index is None: index = np.random.randint(len(self.KANJI_LIST))
-        word = self.KANJI_LIST[index]
+        if index is None: index = np.random.randint(len(self.Hanzi_LIST))
+        word = self.Hanzi_LIST[index]
         if blank:
             index = 0
             word = ''
@@ -191,18 +194,25 @@ class Generator():
         y1, x1, y2, x2 = map(int, (*yx1, *yx2))
         return c, x1, y1, x2, y2
 
-    def cut(self, image, label):
-        l = self.label2cxywh(image.shape[:2], label)
+    def label_visualize(self, image, label):
+        img = Image.fromarray(image)
+        img = img.convert('RGB')
+        draw = ImageDraw.Draw(img)
+        font_size = self._FONT_SIZE//3
+        font = self._get_font('simkai.ttf', font_size)
+        font_color = (255,0,0)
+        box_color = 'red'
+        # box_thickness = 3
+        hw = image.shape[:2]
+        l = self.label2cxywh(hw, label)
         cuts = []
         for i, box in enumerate(l):
-            c, x1, y1, x2, y2 = self.cxywh2cxyxy(box, image.shape[:2])
-            cut = image[y1:y2, x1:x2]
-            # cv2.rectangle(image, (x1,y1), (x2,y2), (10,10,10), 3)
-            im = Image.fromarray(cut)
-            word = self.KANJI_LIST[c]
-            cuts.append((cut, word))
-        return cuts
-
+            c, x1, y1, x2, y2 = self.cxywh2cxyxy(box, hw)
+            # cv2.rectangle(img, (x1,y1), (x2,y2), (10,10,10), 3)
+            word = self.Hanzi_LIST[c]
+            draw.text((x1,max(0,y1-font_size)), word, font=font, fill=font_color)
+            draw.rectangle((x1,y1,x2,y2), outline=box_color)
+        return img
 
 if __name__ == '__main__':
     g = Generator()
@@ -214,12 +224,11 @@ if __name__ == '__main__':
     #     word = label['word']
     #     img.save(f'test/{word}.jpg')
 
-    g.config(mode='multiple', grid=[10,8])
+    g.config(mode='multiple', grid=[100,80])
     img, label = g.gen_sample()
     cv2.imwrite('../test/a.jpg', img)
-    cuts = g.cut(img, label)
-    for cut in cuts:
-        print(cut[1])
+    img = g.label_visualize(img, label)
+    img.save('../test/b.jpg')
 
 
 
